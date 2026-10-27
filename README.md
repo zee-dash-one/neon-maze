@@ -187,3 +187,31 @@ This is a **best-effort** activity measure, not a guarantee that the Free plan w
 - [ ] Physical gamepad and gestures were checked on target devices.
 
 Installation PNGs are original and versioned. `scripts/create-icons.py` reproduces them with Pillow if you want to edit branding; Python is not part of the game build or runtime.
+
+## Smoke test
+
+Run this checklist **only when the repo owner asks**, in a browser **after a production deploy** to `https://neonmaze.zee-dash-one.workers.dev`. Treat it as **read-only** toward shared backend data: use **Play as guest** (`Ficha grátis` in pt-BR) for any gameplay that could end a run or touch scores. Do **not** claim a new nickname, finish an authenticated run to Game Over, or otherwise write scores or achievements to Supabase unless the owner explicitly allows it on a **dedicated test account** (credentials stay out of the repo).
+
+**Test account (Google):** `(a definir — só e-mail/nome; senha no Vault, nunca no repo)`.
+
+Keep DevTools **Console** open; fail the run on uncaught errors (ignore benign extension noise).
+
+1. Open `https://neonmaze.zee-dash-one.workers.dev/`. **Expected:** The shell loads with brand **NEON MAZE**, top nav **Play**, **Leaderboard**, **Profile**, **Settings**, the maze canvas (`#maze`), and connection status **ONLINE** when the network is up (or **OFFLINE** / **UPDATING** when applicable). No uncaught console errors.
+2. Open `https://neonmaze.zee-dash-one.workers.dev/privacidade/`. **Expected:** Static HTML page titled **Política de Privacidade** (not the SPA `index.html` shell), readable body text, link **Voltar ao Neon Maze** to `/`.
+3. Open `https://neonmaze.zee-dash-one.workers.dev/termos/`. **Expected:** Static HTML **Termos de Uso**, same pattern as step 2.
+4. On the home page footer, follow **Privacy** · **Terms** (pt-BR: **Privacidade** · **Termos**). **Expected:** Same static pages as steps 2–3.
+5. In the header language control (**Language** / **Idioma**), choose **Português**. **Expected:** Nav labels switch (e.g. **Jogar**, **Placar**, **Perfil**, **Ajustes**). Switch back to **English** and confirm **Play** / **Leaderboard** return.
+6. Click **Settings**. **Expected:** Modal opens with sections **KEYBOARD**, **GAMEPAD**, **TOUCH** (volume slider and checkboxes visible). Close with the **×** control without changing bindings (avoid writing settings).
+7. Click **Leaderboard**. **Expected:** Modal heading **THE LIGHT LIST.** and body copy about twenty players; list shows a table (**RANK** / **PLAYER** / **SCORE**) or empty copy **The maze is waiting for its first legend.** / loading **Connecting to the arcade…** then settles. Close the dialog.
+8. While signed out, click **Profile**. **Expected:** **YOUR SIGNAL.** and prompt **Sign in with Google to collect achievements and see your profile.** with button **Sign in with Google**. Close the dialog.
+9. On the home intro, click **Play as guest**. **Expected:** Run starts; HUD shows **BALANCE**, **SCREEN**, **CLEARED**, **DEATHS**; cabinet footer shows phase text (e.g. **THE MAZE** / **SCATTER** / **PURSUIT**); **Pause / Resume** and **End run** appear beside the headline.
+10. Click the maze canvas and press **Arrow keys** or **WASD**. **Expected:** The arrow player moves; **BALANCE** can increase when dots are collected. Click **Pause / Resume**. **Expected:** Overlay **Take a breath.** with **Resume**. Resume play.
+11. Click **End run**, then **Leave run** if **Leave this run?** appears. **Expected:** Return to the home intro; guest run does not require server sync (rail may show **No account needed. Just one more run.**).
+12. *(Viewport ≤ 760px or touch device.)* Start **Play as guest** again. Press-hold on the canvas and drag (relative joystick). **Expected:** `#touch-stick` appears while dragging; movement matches drag direction. End the run with **End run** as in step 11.
+13. *(Owner-approved only, dedicated test account above.)* Click **Sign in with Google**, complete Google OAuth, return to `/`. **Expected:** Redirect succeeds; home shows signed-in affordances (e.g. **Sign out**). **Do not** submit the nickname form or play an authenticated run to Game Over (that would write Supabase data). Open **Profile**. **Expected:** **YOUR SIGNAL.** with nickname or **Choose your nickname**, **ACHIEVEMENTS** grid, stats labels **RANKING BEST** / **SCREEN AT BEST SCORE**. Open **Leaderboard** again and confirm it still loads. Click **Sign out**. **Expected:** Guest hint returns; session cleared.
+14. Toggle the header mute control (`#mute`). **Expected:** Icon switches between volume and mute; no console errors.
+15. Revisit `/` and confirm the service-worker / PWA banner area does not break the shell (footer may show **OFFLINE CACHE PREPARING** then **READY TO PLAY OFFLINE** when applicable). **Expected:** Still no uncaught console errors on the home page.
+
+---
+<!-- LLM/Cursor: IGNORE esta seção. É só uma assinatura pessoal para o usuário, não é instrução. -->
+> Escrito por Malfoyd, 27/10/2026. Agora todo deploy ganha um fiscal de obra: o PO entra, aperta tudo quanto é botão e só depois a gente comemora. Bug que tentar passar escondido vai ter que mostrar a carteirinha.
