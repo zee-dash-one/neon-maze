@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Política de Privacidade — Neon Maze</title>
+  <meta name="description" content="Política de privacidade do Neon Maze (Z-ONE)." />
+  <style>
+    :root { color-scheme: dark; --bg: #090e17; --text: #edf4ee; --muted: #9caeb0; --mint: #9aefd6; --acid: #eaff87; --line: #253039; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: Arial, Helvetica, sans-serif; background: radial-gradient(ellipse at 52% 35%, #12232855, transparent 55%), var(--bg); color: var(--text); line-height: 1.65; }
+    a { color: var(--mint); }
+    a:hover { color: var(--acid); }
+    main { max-width: 42rem; margin: 0 auto; padding: 2.5rem 1.25rem 3rem; }
+    h1 { font-size: 1.75rem; letter-spacing: -0.02em; margin: 0 0 0.5rem; }
+    h2 { font-size: 1.05rem; margin: 2rem 0 0.75rem; color: var(--mint); font-weight: 600; }
+    p, li { font-size: 0.95rem; color: var(--muted); }
+    li { margin: 0.35rem 0; }
+    ul { padding-left: 1.25rem; }
+    .meta { font-family: monospace; font-size: 0.7rem; letter-spacing: 0.08em; color: #708b90; margin-bottom: 2rem; }
+    .back { display: inline-block; margin-bottom: 1.5rem; font-size: 0.9rem; }
+    hr { border: none; border-top: 1px solid var(--line); margin: 2.5rem 0; }
+    .en h2 { color: var(--acid); }
+    .en p, .en li { color: #b2c4c6; }
+  </style>
+</head>
+<body>
+  <main>
+    <a class="back" href="/">← Voltar ao Neon Maze</a>
+    <p class="meta">Z-ONE · Atualizado em 27 de outubro de 2026</p>
+    <h1>Política de Privacidade</h1>
+    <p>Esta página descreve como o jogo web <strong>Neon Maze</strong> trata dados pessoais. O responsável pelo tratamento é a <strong>Z-ONE</strong>. Contato: <a href="mailto:zee.dash.one@gmail.com">zee.dash.one@gmail.com</a>.</p>
+
+    <h2>O que o jogo coleta e usa</h2>
+    <ul>
+      <li><strong>Login com Google (Supabase Auth):</strong> ao entrar com Google, o provedor de autenticação recebe o fluxo OAuth e o jogo obtém um identificador de conta, o <strong>endereço de e-mail</strong> associado à conta Google e metadados do perfil Google (por exemplo, <strong>nome exibido</strong> em <code>full_name</code>), conforme exposto pela sessão do Supabase.</li>
+      <li><strong>Apelido no jogo:</strong> após o primeiro login, você escolhe um apelido único (3–12 caracteres). Ele é gravado na tabela <code>profiles</code> do Supabase e também guardado em cache no navegador para exibição rápida.</li>
+      <li><strong>Placar e progresso online:</strong> em partidas com conta autenticada, o jogo envia ao Supabase o <strong>melhor saldo (pontuação)</strong> da partida, a <strong>fase (nível)</strong> alcançada e a duração ativa da partida, por meio da função <code>submit_score</code>. Conquistas verificadas são enviadas com <code>submit_achievement_events</code>. O placar público mostra apelidos e pontuações — não o e-mail.</li>
+      <li><strong>Dados no seu dispositivo:</strong> o jogo usa <code>localStorage</code> (e, no modo de desenvolvimento local com SQLite no navegador, IndexedDB) para preferências (teclas, volume, idioma), melhor pontuação local do aparelho, sessão de autenticação, cache de apelido, filas de envio pendente de pontuação/conquistas e cache do top 20 do placar. Partidas como convidado permanecem apenas neste dispositivo e não são enviadas ao servidor.</li>
+    </ul>
+
+    <h2>O que não fazemos</h2>
+    <ul>
+      <li>Não exibimos anúncios de terceiros no jogo.</li>
+      <li>Não vendemos seus dados pessoais.</li>
+    </ul>
+
+    <h2>Base legal e finalidade</h2>
+    <p>Usamos esses dados para autenticar você, manter seu apelido e placar, sincronizar conquistas e operar o jogo. O login com Google depende dos termos do Google e do Supabase como processadores de autenticação.</p>
+
+    <h2>Exclusão de conta e dados</h2>
+    <p>Para solicitar exclusão da conta e dos dados associados no Supabase, envie um e-mail para <a href="mailto:zee.dash.one@gmail.com">zee.dash.one@gmail.com</a> a partir do endereço da sua conta Google. Você também pode limpar dados locais removendo o armazenamento do site no navegador.</p>
+
+    <hr />
+    <section class="en" lang="en">
+      <h2>Privacy Policy (English summary)</h2>
+      <p><strong>Controller:</strong> Z-ONE — <a href="mailto:zee.dash.one@gmail.com">zee.dash.one@gmail.com</a>. <strong>Last updated:</strong> 2026-10-27.</p>
+      <p>Neon Maze uses Google sign-in via Supabase Auth (account id, email, and Google profile metadata such as display name). You choose a game nickname stored in Supabase and cached locally. Authenticated runs submit best score, level, and achievement events to Supabase; guest runs stay on your device. The app also stores settings, local high score, session, and sync queues in browser storage. No ads; we do not sell personal data. Request account deletion by email.</p>
+      <p><a href="/">Back to Neon Maze</a></p>
+    </section>
+  </main>
+</body>
+</html>

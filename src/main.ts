@@ -58,7 +58,7 @@ app.innerHTML = `
       <div class="legend"><div><i class="legend-spark"></i>${t.sparkLabel}<span>10</span></div><div><i class="legend-power"></i>${t.powerLabel}<span>50</span></div><div><i class="legend-fruit"></i>${t.fruitLabel}<span>100–1,000</span></div></div>
     </aside>
   </main>
-  <footer><span>${t.footer}</span><span id="offline-ready">${t.installing}</span><span>${t.edition}</span></footer>
+  <footer><span>${t.footer}</span><span class="footer-legal"><a href="/privacidade/">${t.privacy}</a> · <a href="/termos/">${t.terms}</a></span><span id="offline-ready">${t.installing}</span><span>${t.edition}</span></footer>
   <div class="toast" role="status" id="toast" hidden></div>
   <div class="achievement-popups" id="achievement-popups" aria-live="polite"></div>
   <dialog id="dialog"><button class="dialog-close icon-button" data-action="close" aria-label="${t.close}">${svg('close')}</button><div id="dialog-content"></div></dialog>

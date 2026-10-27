@@ -1,7 +1,7 @@
-name: Weekly Supabase activity
+name: Supabase activity (every 3 days)
 on:
   schedule:
-    - cron: '17 9 * * 1'
+    - cron: '17 9 */3 * *'
   workflow_dispatch:
 permissions:
   contents: read

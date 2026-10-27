@@ -158,4 +158,6 @@ export const ptBR: typeof en = {
   storageWarning: 'Memória da máquina indisponível. Recorde e ajustes somem ao sair.',
   syncRejected: 'Partida não entrou no placar. Teu recorde local tá salvo.',
   localeLabel: 'Idioma',
+  privacy: 'Privacidade',
+  terms: 'Termos',
 };
