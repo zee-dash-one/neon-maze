@@ -57,4 +57,6 @@ export const en = {
   storageWarning: 'Device storage is unavailable. Records and settings will last only for this visit.',
   syncRejected: 'This run could not be submitted. Your device record is safe.',
   localeLabel: 'Language',
+  privacy: 'Privacy',
+  terms: 'Terms',
 };

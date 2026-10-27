@@ -60,8 +60,8 @@ On the Codex Windows environment, if pnpm shims are missing, use `node node_modu
 | `supabase/migrations/004_king_cron.sql` | Production Supabase Cron job for daily ranking snapshots |
 | `supabase/migrations/005_reset_and_achievement_thresholds.sql` | Wipe game data + reseed catalog + thresholds from `config.json` |
 | `wrangler.jsonc` | Cloudflare assets + empty `previews` block for `wrangler preview` |
-| `.github/workflows/deploy.yml` | Tests, build, and Cloudflare Pages deploy |
-| `.github/workflows/supabase-keepalive.yml` | Weekly database read |
+| `.github/workflows/deploy.yml` | Tests, build, and Cloudflare Workers deploy (`wrangler deploy`) |
+| `.github/workflows/supabase-keepalive.yml` | Scheduled database read (every 3 days) |
 
 ### Maze generation
 
@@ -114,12 +114,13 @@ Score submissions are queued during play and transmitted at game over or when th
 2. In **SQL Editor**, run migrations `001`, `002`, then `003` in numerical order. On an existing project with 001/002 already installed, run **only `003_achievements.sql`**. Then enable Supabase Cron and run `004_king_cron.sql` for the daily King snapshot. Apply each migration once. These create the profile, leaderboard, achievement catalog, protected progress events and award functions.
 3. In **Project Settings → API**, copy the URL `https://YOUR_PROJECT_REF.supabase.co` and the **publishable key** (or legacy `anon` key). Never put `service_role`, secret key, database password, or Google secret in the frontend.
 4. In Google Cloud Console, select or create a project. Configure the OAuth consent screen (name, contacts, audience); while in Testing, add test users.
-5. Create an **OAuth client ID → Web application**. Under *Authorized JavaScript origins*, add production origin, e.g. `https://neon-maze.pages.dev`, and your local origin (`http://127.0.0.1:5173`). Under *Authorized redirect URIs*, add **exactly** `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`.
+5. Create an **OAuth client ID → Web application**. Under *Authorized JavaScript origins*, add production origin `https://neonmaze.zee-dash-one.workers.dev`, and your local origin (`http://127.0.0.1:5173`). Under *Authorized redirect URIs*, add **exactly** `https://YOUR_PROJECT_REF.supabase.co/auth/v1/callback`.
 6. In **Supabase → Authentication → Sign In / Providers → Google**, enable the provider and paste Google Client ID and Client Secret. Client Secret stays only in Supabase.
-7. In **Authentication → URL Configuration**, set production Site URL. Add Redirect URLs `https://neon-maze.pages.dev/`, `http://127.0.0.1:5173/`, and `http://127.0.0.1:4173/`. If you use `localhost`, register that origin separately. Include a custom domain if you have one.
-8. Fill `.env` locally. On GitHub, store `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUB_KEY` (or `VITE_SUPABASE_ANON_KEY` for legacy projects). These keys are in the bundle and public by design; security is RLS/RPC.
-9. Test “Sign in with Google”. OAuth return uses PKCE managed by the SDK. On first login, choose a unique nickname of 3–12 ASCII characters: letters, numbers, or `_`. Uniqueness is case-insensitive. Nickname is immutable in this version.
-10. Finish an authenticated run, open the leaderboard, and verify a single row in `scores`. A worse run does not replace the record. Test another account and a guest session.
+7. In **Authentication → URL Configuration**, set production Site URL. Add Redirect URLs `https://neonmaze.zee-dash-one.workers.dev/`, `http://127.0.0.1:5173/`, and `http://127.0.0.1:4173/`. If you use `localhost`, register that origin separately. Include a custom domain if you have one.
+8. For Google OAuth verification, static legal pages are at `/privacidade/` and `/termos/` (`public/privacidade/`, `public/termos/`). They are copied into `dist/` at build time and served as HTML by the Worker assets binding before the SPA fallback in `wrangler.jsonc`.
+9. Fill `.env` locally. On GitHub, store `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUB_KEY` (or `VITE_SUPABASE_ANON_KEY` for legacy projects). These keys are in the bundle and public by design; security is RLS/RPC.
+10. Test “Sign in with Google”. OAuth return uses PKCE managed by the SDK. On first login, choose a unique nickname of 3–12 ASCII characters: letters, numbers, or `_`. Uniqueness is case-insensitive. Nickname is immutable in this version.
+11. Finish an authenticated run, open the leaderboard, and verify a single row in `scores`. A worse run does not replace the record. Test another account and a guest session.
 
 Official references: [Google on Supabase](https://supabase.com/docs/guides/auth/social-login/auth-google), [OAuth in the JavaScript SDK](https://supabase.com/docs/reference/javascript/auth-signinwithoauth), [RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), and [Supabase Cron](https://supabase.com/docs/guides/cron).
 
@@ -133,35 +134,45 @@ Migration 003 adds the 18 achievements in [the catalog](docs/ACHIEVEMENTS.md). `
 
 **Security limit:** the offline client reports score and duration. These limits block absurd values and simple abuse but do not prove a legitimate run against a tampered client. A competitive leaderboard with strong guarantees would need verifiable replay or an authoritative server. There is no browser secret that fixes this. Tests use embedded PostgreSQL (PGlite) and simulate only `auth.users`, `auth.uid()`, and roles; real OAuth flow requires configured accounts.
 
-## Deploy to Cloudflare Pages via GitHub Actions
+## Deploy to Cloudflare Workers via GitHub Actions
+
+Production URL: **https://neonmaze.zee-dash-one.workers.dev**
+
+The app is a **Cloudflare Worker** named `neonmaze` with a static **assets** binding (`wrangler.jsonc` points at `./dist` from the Vite build). Unknown paths fall back to the SPA shell (`not_found_handling: "single-page-application"`); files such as `privacidade/index.html` and `termos/index.html` are served as plain HTML when present in `dist/`.
 
 1. Create a GitHub repository and push this folder to `main` (including `pnpm-lock.yaml`, `pnpm-workspace.yaml`, `public/`, and `.github/`; exclude `.env`, `node_modules/`, and `dist/`). If you use a personal token to push workflows, grant the appropriate workflow scope/permission.
-2. In Cloudflare, create a **Pages → Direct Upload** project named, for example, `neon-maze`. Upload is done by the Action; you do not need Pages Git Integration as well.
-3. Create a Cloudflare API token with **Account → Cloudflare Pages → Edit**, scoped to the correct account. Copy the Account ID too.
+2. In Cloudflare, ensure the account can deploy Workers. The Worker name in `wrangler.jsonc` is `neonmaze` (first deploy creates or updates that Worker).
+3. Create a Cloudflare API token with **Workers Scripts → Edit** (and account read as needed), scoped to the correct account. Copy the Account ID too.
 4. In GitHub, open **Settings → Secrets and variables → Actions** and create:
 
    | Type | Name | Value |
    | --- | --- | --- |
-   | Secret | `CLOUDFLARE_API_TOKEN` | Pages deploy token |
+   | Secret | `CLOUDFLARE_API_TOKEN` | Workers deploy token |
    | Secret | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare account ID |
    | Secret | `VITE_SUPABASE_URL` | Public Supabase project URL |
    | Secret | `VITE_SUPABASE_PUB_KEY` | Supabase publishable key (preferred) |
    | Secret | `VITE_SUPABASE_ANON_KEY` | Legacy anon key, fallback |
-   | Variable | `CLOUDFLARE_PAGES_PROJECT` | Exact Pages project name |
 
 5. Create the GitHub Environment `production` (optionally require human deploy approval). Keep both Supabase secrets at repo level: the `verify` job and keepalive need them too.
 6. Push to `main` or run **Actions → Verify and deploy Neon Maze → Run workflow**. Pull requests run validation but do not publish or receive production credentials on forks.
-7. CI installs with frozen lockfile, checks TypeScript, runs Vitest (1,200 seeds + database), builds, tests Chromium including offline mode, and publishes **the same artifact** with `wrangler pages deploy`. Deploy URL appears in Wrangler logs.
-8. Open `https://PROJECT_NAME.pages.dev`, update Supabase/Google redirect URLs for that domain, and test the full flow. Without Supabase secrets, the bundle still works in guest mode.
-9. To roll back, promote a previous deploy in the Pages dashboard or revert the commit and run the workflow again. The service worker keeps a consistent version until the user closes old tabs.
+7. CI installs with frozen lockfile, checks TypeScript, runs Vitest (1,200 seeds + database), builds, tests Chromium including offline mode, uploads `dist/` as an artifact, and the `deploy` job runs **`pnpm exec wrangler deploy`** with that artifact. The Workers URL appears in Wrangler logs.
+8. Open `https://neonmaze.zee-dash-one.workers.dev`, update Supabase/Google redirect URLs for that domain, and test the full flow. Without Supabase secrets, the bundle still works in guest mode.
+9. To roll back, redeploy a previous commit on `main` or use the Cloudflare dashboard version history for the Worker. The service worker keeps a consistent version until the user closes old tabs.
 
-Official reference: [Direct Upload with CI on Cloudflare Pages](https://developers.cloudflare.com/pages/how-to/use-direct-upload-with-continuous-integration/).
+Local Worker preview after a production build:
 
-### Weekly Supabase activity
+```sh
+pnpm build
+pnpm exec wrangler dev
+```
 
-`supabase-keepalive.yml` performs a real read of the scores table every Monday at **09:17 UTC / 06:17 São Paulo**, using only the public key. It can be triggered manually and fails visibly if the project or secret is unavailable.
+Official references: [Workers static assets](https://developers.cloudflare.com/workers/static-assets/), [Wrangler deploy](https://developers.cloudflare.com/workers/wrangler/commands/#deploy).
 
-This is a **best-effort** activity measure, not a guarantee that the Free plan will never pause. Supabase evaluates low activity over seven-day windows; GitHub’s scheduler can delay or disable schedules on inactive repos. One weekly query is not an availability guarantee. If the project pauses, restore it from the dashboard; offline play still works. [Supabase official pause policy](https://supabase.com/docs/guides/platform/free-project-pausing).
+### Supabase activity (every 3 days)
+
+`supabase-keepalive.yml` performs a real read of the scores table on a cron schedule (**09:17 UTC** every third day: `17 9 */3 * *`), using only the public key. It can be triggered manually and fails visibly if the project or secret is unavailable.
+
+This is a **best-effort** activity measure, not a guarantee that the Free plan will never pause. Supabase evaluates low activity over seven-day windows; GitHub’s scheduler can delay or disable schedules on inactive repos. Periodic reads are not an availability guarantee. If the project pauses, restore it from the dashboard; offline play still works. [Supabase official pause policy](https://supabase.com/docs/guides/platform/free-project-pausing).
 
 ## Acceptance checklist
 
